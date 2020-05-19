@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Function
-from .utils import load_state_dict_from_url
+from torch.hub import load_state_dict_from_url
 
 
 __all__ = ['AlexNet', 'alexnet']
@@ -92,16 +92,11 @@ def alexnet(pretrained=False, progress=True, **kwargs):
     model = AlexNet(**kwargs)
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls['alexnet'],
-                                              strict=False,
                                               progress=progress)
-        model.load_state_dict(state_dict)
-        model.dann_classifier[1].weight.data = model.classifier[1].weight.data
-        model.dann_classifier[1].bias.data = model.classifier[1].bias.data
+        model.load_state_dict(state_dict, strict=False)
         
-        model.dann_classifier[4].weight.data = model.classifier[4].weight.data
-        model.dann_classifier[4].bias.data = model.classifier[4].bias.data
-        
-        model.dann_classifier[6].weight.data = model.classifier[6].weight.data
-        model.dann_classifier[6].bias.data = model.classifier[6].bias.data
+        model.dann_classifier[6] = nn.Linear(4096, 1000)
+        model.dann_classifier.load_state_dict(model.classifier.state_dict())
+        model.dann_classifier[6] = nn.Linear(4096, 2)
     return model
 
